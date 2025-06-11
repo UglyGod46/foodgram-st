@@ -19,6 +19,7 @@ from .serializers import (
     RecipeSerializer,
     IngredientSerializer,
     CustomUserSerializer,
+    CustomUserCreateSerializer
 )
 
 
@@ -99,12 +100,21 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[permissions.IsAuthenticated],
-    )
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.AllowAny()]
+        return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CustomUserCreateSerializer
+        return CustomUserSerializer
+
+    @action(detail=True, methods=['post', 'delete'], permission_classes=[
+        permissions.IsAuthenticated
+    ])
     def subscribe(self, request, pk=None):
         user = self.get_object()
         if request.method == 'POST':

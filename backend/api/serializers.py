@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from django.core.files.base import ContentFile
+from djoser.serializers import (
+    UserCreateSerializer as DjoserUserCreateSerializer
+)
 import base64
 
 from users.models import User, Follow
@@ -19,6 +22,26 @@ class Base64ImageField(serializers.ImageField):
             ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name=f'image.{ext}')
         return super().to_internal_value(data)
+
+
+class CustomUserCreateSerializer(DjoserUserCreateSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'password'
+        )
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
+
+    def to_representation(self, instance):
+        return CustomUserSerializer(instance, context=self.context).data
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
