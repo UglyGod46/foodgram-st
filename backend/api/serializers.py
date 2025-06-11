@@ -4,7 +4,11 @@ import base64
 
 from users.models import User, Follow
 from recipes.models import (
-    Recipe, Ingredient, RecipeIngredient, Favorite, ShoppingCart
+    Recipe,
+    Ingredient,
+    RecipeIngredient,
+    Favorite,
+    ShoppingCart
 )
 
 
@@ -23,8 +27,13 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'email', 'id', 'username', 'first_name',
-            'last_name', 'is_subscribed', 'avatar'
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'avatar'
         )
 
     def get_is_subscribed(self, obj):
@@ -75,8 +84,14 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'id', 'name', 'image', 'text', 'ingredients',
-            'cooking_time', 'author', 'is_favorited',
+            'id',
+            'name',
+            'image',
+            'text',
+            'ingredients',
+            'cooking_time',
+            'author',
+            'is_favorited',
             'is_in_shopping_cart'
         )
 
