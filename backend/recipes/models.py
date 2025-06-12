@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth import get_user_model
 import shortuuid
 
-
 User = get_user_model()
 
 
@@ -25,7 +24,10 @@ class Recipe(models.Model):
         related_name='recipes'
     )
     name = models.CharField(max_length=200)
-    image = models.ImageField(upload_to='recipes/')
+    image = models.ImageField(
+        upload_to='recipes/',
+        null=True, blank=True
+    )
     text = models.TextField()
     ingredients = models.ManyToManyField(
         Ingredient,

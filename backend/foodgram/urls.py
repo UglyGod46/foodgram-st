@@ -1,10 +1,17 @@
-# backend/foodgram/urls.py
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
+from django.http import HttpResponseRedirect
+from recipes.models import Recipe
+
+
+def redirect_short_link(request, recipe_id):
+    if Recipe.objects.filter(id=recipe_id).exists():
+        return HttpResponseRedirect(f'/api/recipes/{recipe_id}/')
+    return HttpResponseRedirect('/api/recipes/')
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('r/<int:recipe_id>/', redirect_short_link, name='recipe-short-link'),
+]

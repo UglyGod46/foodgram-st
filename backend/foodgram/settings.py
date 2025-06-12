@@ -48,7 +48,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 6,
+    'PAGE_SIZE': 6,  # Исправлено с '6d' на 6
     'PAGE_SIZE_QUERY_PARAM': 'limit',
 }
 
@@ -64,6 +64,7 @@ DJOSER = {
         'user_create': ['rest_framework.permissions.AllowAny'],
         'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+        'set_password': ['rest_framework.permissions.IsAuthenticated'],
     },
     'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
     'CREATE_SESSION_ON_LOGIN': False,
