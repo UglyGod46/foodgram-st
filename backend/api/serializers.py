@@ -234,6 +234,13 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
         return value
 
+    def validate_cooking_time(self, value):
+        if value < 1:
+            raise serializers.ValidationError(
+                "Время приготовления должно быть не менее 1 минуты."
+            )
+        return value
+
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:

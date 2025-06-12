@@ -7,7 +7,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny
+)
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -28,6 +31,7 @@ from .serializers import (
     AvatarSerializer,
     SetPasswordSerializer
 )
+from .permissions import IsAuthorOrReadOnly
 
 
 class CustomPagination(PageNumberPagination):
@@ -38,7 +42,7 @@ class CustomPagination(PageNumberPagination):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthorOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['author']
     search_fields = ['name']
@@ -70,7 +74,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=['get'],
-        permission_classes=[IsAuthenticated],
+        permission_classes=[AllowAny],
         url_path='get-link',
         url_name='get-link'
     )
