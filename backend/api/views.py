@@ -4,6 +4,10 @@ from django.http import HttpResponse
 from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -19,7 +23,8 @@ from .serializers import (
     RecipeSerializer,
     IngredientSerializer,
     CustomUserSerializer,
-    CustomUserCreateSerializer
+    CustomUserCreateSerializer,
+    AvatarSerializer
 )
 
 
@@ -97,10 +102,16 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['^name']
 
 
+class CustomPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
+    max_page_size = 100
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
 
     def get_permissions(self):
         if self.action == 'create':
@@ -122,3 +133,42 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'status': 'subscribed'}, status=201)
         Follow.objects.filter(user=request.user, following=user).delete()
         return Response({'status': 'unsubscribed'})
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        limit = self.request.query_params.get('limit')
+        if limit:
+            self.paginator.page_size = int(limit)
+        return queryset
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated]
+    )
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['put', 'patch'],
+        url_path='avatar',
+        url_name='user-avatar',
+        permission_classes=[IsAuthenticated],
+        parser_classes=[MultiPartParser, FormParser]
+    )
+    def avatar(self, request):
+        user = request.user
+        serializer = AvatarSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @avatar.mapping.delete
+    def delete_avatar(self, request):
+        user = request.user
+        user.avatar.delete()
+        user.avatar = None
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)

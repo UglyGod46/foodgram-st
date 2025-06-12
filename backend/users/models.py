@@ -12,6 +12,9 @@ class User(AbstractUser):
         default='avatars/default.jpg'
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
     class Meta:
         ordering = ['username']
 

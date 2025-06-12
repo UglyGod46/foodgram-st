@@ -65,6 +65,8 @@ DJOSER = {
         'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
+    'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
+    'CREATE_SESSION_ON_LOGIN': False,
 }
 
 MIDDLEWARE = [

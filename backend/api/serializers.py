@@ -24,6 +24,15 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
+class AvatarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('avatar',)
+        extra_kwargs = {
+            'avatar': {'required': True}
+        }
+
+
 class CustomUserCreateSerializer(DjoserUserCreateSerializer):
     class Meta:
         model = User
@@ -41,7 +50,13 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         return user
 
     def to_representation(self, instance):
-        return CustomUserSerializer(instance, context=self.context).data
+        return {
+            'id': instance.id,
+            'email': instance.email,
+            'username': instance.username,
+            'first_name': instance.first_name,
+            'last_name': instance.last_name
+        }
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -50,11 +65,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'email',
             'id',
             'username',
             'first_name',
             'last_name',
+            'email',
             'is_subscribed',
             'avatar'
         )
@@ -62,6 +77,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
+            return False
+        if obj == request.user:
             return False
         return Follow.objects.filter(
             user=request.user,
