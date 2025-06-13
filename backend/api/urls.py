@@ -8,6 +8,7 @@ router.register(r'recipes', RecipeViewSet)
 router.register(r'ingredients', IngredientViewSet)
 router.register(r'users', UserViewSet, basename='users')
 
+
 urlpatterns = [
     path('', include(router.urls)),
     path('users/', include('djoser.urls')),
@@ -16,4 +17,7 @@ urlpatterns = [
         'put': 'avatar',
         'delete': 'delete_avatar'
     }), name='user-avatar'),
+    path('users/subscriptions/', UserViewSet.as_view({
+        'get': 'subscriptions'
+    }), name='user-subscriptions'),
 ]

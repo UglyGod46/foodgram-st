@@ -217,6 +217,14 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart'
         )
 
+    def validate(self, data):
+        if self.context['request'].method in ['PATCH', 'PUT']:
+            if 'recipeingredient_set' not in data:
+                raise serializers.ValidationError({
+                    "ingredients": ["Это поле обязательно при обновлении."]
+                })
+        return data
+
     def validate_ingredients(self, value):
         if not value:
             raise serializers.ValidationError(
@@ -288,3 +296,54 @@ class RecipeSerializer(serializers.ModelSerializer):
                 amount=ingredient_data['amount']
             )
         return instance
+
+
+class RecipeShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'is_subscribed',
+            'avatar',
+            'recipes',
+            'recipes_count'
+        )
+
+    def get_is_subscribed(self, obj):
+        return True
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes = obj.recipes.all()
+
+        recipes_limit = request.query_params.get(
+            'recipes_limit'
+        ) if request else None
+        if recipes_limit:
+            try:
+                recipes = recipes[:int(recipes_limit)]
+            except ValueError:
+                pass
+
+        return RecipeShortSerializer(
+            recipes,
+            many=True,
+            context={'request': request}
+        ).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
