@@ -197,9 +197,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
         content = '\n'.join([
-            f"{item['ingredient__name']} ({
-                item['ingredient__measurement_unit']
-            }) - {item['total_amount']}"
+            f"{item['ingredient__name']} "
+            f"({item['ingredient__measurement_unit']}) - "
+            f"{item['total_amount']}"
             for item in ingredients
         ])
 

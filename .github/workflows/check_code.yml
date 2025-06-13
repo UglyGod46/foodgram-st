@@ -1,0 +1,32 @@
+name: Code Quality Check
+
+on:
+  push:
+    branches:
+      - backend-dev
+  pull_request:
+    branches:
+      - backend-dev
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install flake8
+
+      - name: Run linting
+        run: |
+          cd backend
+          flake8 . --max-line-length=88 --extend-ignore=E203
