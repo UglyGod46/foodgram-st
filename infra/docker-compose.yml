@@ -11,22 +11,20 @@ services:
       - POSTGRES_DB=postgres
 
   backend:
-      build:
-        context: ../backend
-        dockerfile: Dockerfile
-      restart: always
-      volumes:
-        - static_value:/app/static/
-        - media_value:/app/media/
-        - ../data:/app/data/
-      depends_on:
-        - db
-      env_file:
-        - ../.env
+    image: uglygod46/foodgram-backend:latest
+    restart: always
+    volumes:
+      - static_value:/app/static/
+      - media_value:/app/media/
+      - ../data:/app/data/
+    depends_on:
+      - db
+    env_file:
+      - ../.env
 
   frontend:
     container_name: foodgram-front
-    build: ../frontend
+    image: uglygod46/foodgram-frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
 
