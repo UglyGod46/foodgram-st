@@ -8,33 +8,31 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     avatar = models.ImageField(
-        upload_to='avatars/',
-        default='avatars/default.jpg'
+        upload_to="avatars/",
+        default="avatars/default.jpg"
     )
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username"]
 
     class Meta:
-        ordering = ['username']
+        ordering = ["username"]
 
 
 class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='follower'
+        related_name="follower"
     )
     following = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following'
+        User, on_delete=models.CASCADE, related_name="following"
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'following'],
-                name='unique_follow'
+                fields=["user", "following"],
+                name="unique_follow"
             )
         ]
