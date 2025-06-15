@@ -7,10 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
-from rest_framework.permissions import (
-    IsAuthenticated,
-    AllowAny
-)
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.exceptions import ValidationError
 
@@ -21,7 +18,7 @@ from recipes.models import (
     Ingredient,
     RecipeIngredient,
     Favorite,
-    ShoppingCart,
+    ShoppingCart
 )
 from users.models import User, Follow
 from .serializers import (
@@ -98,7 +95,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk=None):
         try:
-            recipe = self.get_object()  # Проверяем существование рецепта
+            recipe = self.get_object()
         except Http404:
             return Response(
                 {"detail": "Рецепт не найден."},
@@ -106,9 +103,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
         if request.method == 'POST':
-            if Favorite.objects.filter(
-                user=request.user, recipe=recipe
-            ).exists():
+            if request.user.favorite_set.filter(recipe=recipe).exists():
                 return Response(
                     {"errors": "Рецепт уже в избранном."},
                     status=status.HTTP_400_BAD_REQUEST
@@ -119,9 +114,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:  # DELETE method
-            deleted_count, _ = Favorite.objects.filter(
-                user=request.user,
+        else:
+            deleted_count, _ = request.user.favorite_set.filter(
                 recipe=recipe
             ).delete()
 
@@ -148,10 +142,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
         if request.method == 'POST':
-            if ShoppingCart.objects.filter(
-                user=request.user,
-                recipe=recipe
-            ).exists():
+            if request.user.shoppingcart_set.filter(recipe=recipe).exists():
                 return Response(
                     {"errors": "Рецепт уже в корзине."},
                     status=status.HTTP_400_BAD_REQUEST
@@ -166,9 +157,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 serializer.data,
                 status=status.HTTP_201_CREATED
             )
-        else:  # DELETE method
-            deleted_count, _ = ShoppingCart.objects.filter(
-                user=request.user,
+        else:
+            deleted_count, _ = request.user.shoppingcart_set.filter(
                 recipe=recipe
             ).delete()
 
@@ -186,7 +176,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def download_shopping_cart(self, request):
-
         ingredients = RecipeIngredient.objects.filter(
             recipe__shoppingcart__user=request.user
         ).values(
@@ -255,23 +244,22 @@ class UserViewSet(viewsets.ModelViewSet):
             return CustomUserCreateSerializer
         return CustomUserSerializer
 
-    @action(detail=True, methods=['post', 'delete'], permission_classes=[
-        permissions.IsAuthenticated
-    ])
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def subscribe(self, request, pk=None):
         user = self.get_object()
 
         if request.method == 'POST':
-            # Проверка подписки на самого себя
             if user == request.user:
                 return Response(
                     {"errors": "Нельзя подписаться на самого себя."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            if Follow.objects.filter(
-                user=request.user, following=user
-            ).exists():
+            if request.user.follower.filter(following=user).exists():
                 return Response(
                     {"errors": "Вы уже подписаны на этого пользователя."},
                     status=status.HTTP_400_BAD_REQUEST
@@ -288,19 +276,14 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
         else:
-            if not Follow.objects.filter(
-                user=request.user, following=user
-            ).exists():
+            if not request.user.follower.filter(following=user).exists():
                 return Response(
                     {"errors": "Подписка не найдена."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            Follow.objects.filter(user=request.user, following=user).delete()
+            request.user.follower.filter(following=user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
-        Follow.objects.filter(user=request.user, following=user).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -375,8 +358,14 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path='subscriptions',
         url_name='subscriptions'
     )
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated],
+        url_path='subscriptions',
+        url_name='subscriptions'
+    )
     def subscriptions(self, request):
-        """Получение списка подписок текущего пользователя."""
         following_users = User.objects.filter(
             following__user=request.user
         )
